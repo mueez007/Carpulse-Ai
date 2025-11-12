@@ -1,0 +1,205 @@
+import ApiService from "../services/apiService.js";
+
+const logList = document.getElementById("logList");
+const addLogBtn = document.getElementById("addLogBtn");
+const logModal = document.getElementById("logModal");
+const closeModalBtn = document.getElementById("closeModalBtn");
+const logForm = document.getElementById("logForm");
+const modalTitle = document.getElementById("modalTitle");
+const deleteConfirmModal = document.getElementById("deleteConfirmModal");
+const confirmDeleteBtn = document.getElementById("confirmDeleteBtn");
+const cancelDeleteBtn = document.getElementById("cancelDeleteBtn");
+
+let logToDeleteId = null;
+
+let editLogId = "";
+document.addEventListener("DOMContentLoaded", () => {
+  loadLogs();
+});
+
+async function loadLogs() {
+  try {
+    const logs = await ApiService.get("/vehicle_service_logs/");
+    renderLogs(logs);
+  } catch (error) {
+    console.error("Error fetching vehicle service logs:", error);
+    logList.innerHTML = `<p class="error-text">Failed to load vehicle service logs.</p>`;
+  }
+}
+
+function renderLogs(logs = []) {
+  if (!logs.length) {
+    logList.innerHTML = `<p>No vehicle service logs found. Add a new one!</p>`;
+    return;
+  }
+
+  logList.innerHTML = logs
+    .map(
+      (log) => `
+        <div class="log-card">
+          <div class="log-info">
+            <h3>Vehicle ID: ${escapeHtml(log.vehicle_id)}</h3>
+            <p><strong>Owner Name:</strong> ${escapeHtml(log.owner_name || "N/A")}</p>
+            <p><strong>Vehicle Type:</strong> ${escapeHtml(log.vehicle_type || "N/A")}</p>
+            <p><strong>Service Date:</strong> ${escapeHtml(new Date(log.service_date).toLocaleDateString())}</p>
+            <p><strong>Service Type:</strong> ${escapeHtml(log.service_type)}</p>
+            <p><strong>Description:</strong> ${escapeHtml(log.description || "N/A")}</p>
+            <p><strong>Mileage:</strong> ${escapeHtml(log.mileage)}</p>
+            <p><strong>Cost:</strong> $${escapeHtml(log.cost)}</p>
+            <p><strong>Next Service Date:</strong> ${
+              log.next_service_date ? escapeHtml(new Date(log.next_service_date).toLocaleDateString()) : "N/A"
+            }</p>
+          </div>
+          <div class="log-actions">
+            <button
+              class="btn-edit"
+              data-action="edit"
+              data-id="${log.id}"
+              data-owner_name="${escapeHtml(log.owner_name || "")}"
+              data-vehicle_type="${escapeHtml(log.vehicle_type || "")}"
+              data-vehicle_id="${escapeHtml(log.vehicle_id)}"
+              data-service_date="${escapeHtml(log.service_date)}"
+              data-service_type="${escapeHtml(log.service_type)}"
+              data-description="${escapeHtml(log.description || "")}"
+              data-mileage="${escapeHtml(log.mileage)}"
+              data-cost="${escapeHtml(log.cost)}"
+              data-next_service_date="${escapeHtml(log.next_service_date || "")}"
+            >
+              <i class="fa-solid fa-pen"></i>
+            </button>
+            <button
+              class="btn-delete"
+              data-action="delete"
+              data-id="${log.id}"
+            >
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </div>
+        </div>
+      `
+    )
+    .join("");
+}
+
+addLogBtn.addEventListener("click", () => openLogModal());
+closeModalBtn.addEventListener("click", () => closeLogModal());
+cancelDeleteBtn.addEventListener("click", () => closeDeleteConfirmModal());
+confirmDeleteBtn.addEventListener("click", () => {
+  if (logToDeleteId) {
+    deleteLog(logToDeleteId);
+    closeDeleteConfirmModal();
+  }
+});
+
+function openLogModal(log = null) {
+  logModal.style.display = "flex";
+  if (log) {
+    modalTitle.textContent = "Edit Service Log";
+    document.getElementById("owner_name").value = log.owner_name;
+    document.getElementById("vehicle_type").value = log.vehicle_type;
+    document.getElementById("vehicle_id").value = log.vehicle_id;
+    document.getElementById("service_date").value = log.service_date.split("T")[0];
+    document.getElementById("service_type").value = log.service_type;
+    document.getElementById("description").value = log.description;
+    document.getElementById("mileage").value = log.mileage;
+    document.getElementById("cost").value = log.cost;
+    document.getElementById("next_service_date").value = log.next_service_date ? log.next_service_date.split("T")[0] : "";
+    editLogId = log.id;
+  } else {
+    modalTitle.textContent = "Add New Service Log";
+    logForm.reset();
+    editLogId = null;
+  }
+}
+
+function closeLogModal() {
+  logModal.style.display = "none";
+  editLogId = null;
+}
+
+function openDeleteConfirmModal(logId) {
+  logToDeleteId = logId;
+  deleteConfirmModal.style.display = "flex";
+}
+
+function closeDeleteConfirmModal() {
+  deleteConfirmModal.style.display = "none";
+  logToDeleteId = null;
+}
+
+logForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const logData = {
+    id: editLogId, // ID is generated by backend for new logs
+    owner_name: logForm.owner_name.value || null,
+    vehicle_type: logForm.vehicle_type.value || null,
+    vehicle_id: logForm.vehicle_id.value,
+    service_date: new Date(logForm.service_date.value).toISOString(),
+    service_type: logForm.service_type.value,
+    description: logForm.description.value,
+    mileage: parseInt(logForm.mileage.value),
+    cost: parseFloat(logForm.cost.value),
+    next_service_date: logForm.next_service_date.value ? new Date(logForm.next_service_date.value).toISOString() : null,
+  };
+
+  try {
+    if (editLogId) {
+      await ApiService.put(`/vehicle_service_logs/${editLogId}`, logData);
+    } else {
+      await ApiService.post("/vehicle_service_logs/", logData);
+    }
+    closeLogModal();
+    loadLogs();
+  } catch (error) {
+    console.error("Error saving vehicle service log:", error);
+  }
+});
+
+async function deleteLog(id) {
+  try {
+    await ApiService.delete(`/vehicle_service_logs/${id}`);
+    loadLogs();
+  } catch (error) {
+    console.error("Error deleting vehicle service log:", error);
+  }
+}
+
+window.onclick = function (event) {
+  if (event.target === logModal || event.target === deleteConfirmModal) {
+    closeLogModal();
+    closeDeleteConfirmModal();
+  }
+};
+
+function escapeHtml(str = "") {
+  return String(str)
+    .replaceAll("&", "&")
+    .replaceAll("<", "<")
+    .replaceAll(">", ">");
+}
+
+
+logList.addEventListener("click", (e) => {
+  const btn = e.target.closest("button[data-action]");
+  if (!btn) return;
+  const action = btn.dataset.action;
+  const id = btn.dataset.id;
+
+  if (action === "edit") {
+    const data = {
+      id: btn.dataset.id || "",
+      owner_name: btn.dataset.owner_name || "",
+      vehicle_type: btn.dataset.vehicle_type || "",
+      vehicle_id: btn.dataset.vehicle_id || "",
+      service_date: btn.dataset.service_date || "",
+      service_type: btn.dataset.service_type || "",
+      description: btn.dataset.description || "",
+      mileage: parseInt(btn.dataset.mileage) || 0,
+      cost: parseFloat(btn.dataset.cost) || 0,
+      next_service_date: btn.dataset.next_service_date || "",
+    };
+    openLogModal(data);
+  } else if (action === "delete") {
+    openDeleteConfirmModal(id);
+  }
+});
