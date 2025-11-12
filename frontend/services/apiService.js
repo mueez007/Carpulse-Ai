@@ -1,6 +1,6 @@
 // API Service configuration
 const API_CONFIG = {
-  baseURL: "<BACKEND_URL>", // Configure the relevant backend url
+  baseURL: "http://127.0.0.1:8080", // Configure the relevant backend url
   headers: {
     "Content-Type": "application/json",
   },

@@ -31,6 +31,16 @@ class Service:
 
     async def delete_vehicle_service_log(self, log_id: str):
         await self.repo.init_db()
+        if isinstance(log_id, str):
+            log = VehicleServiceLog(**{"id": log_id})
+            deleted = await self.repo.delete(log)
+            if not deleted:
+                raise HTTPException(status_code=404, message="Log not found")
+            return {"message": "Log deleted successfully", "id": log_id}
+        raise HTTPException(status_code=400, message="Invalid log_id")
+
+    async def delete_vehicle_service_log(self, log_id: str):
+        await self.repo.init_db()
         deleted_count = await self.repo.delete(log_id)
         if deleted_count == 0:
             raise HTTPException(status_code=404, detail="Vehicle service log not found to delete")

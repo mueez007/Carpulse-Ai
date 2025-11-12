@@ -14,6 +14,16 @@ class VehicleServiceLog(BaseModel):
     mileage: int
     cost: float
     next_service_date: Optional[datetime] = None
+    mechanic_id: Optional[str] = None
+
+
+class Mechanic(BaseModel):
+    model_config = ConfigDict(json_encoders={datetime: lambda dt: dt.isoformat()})
+    id: Optional[str] = None
+    name: str
+    specialization: str
+    contact_number: str
+    experience_years: int
 
 
 
