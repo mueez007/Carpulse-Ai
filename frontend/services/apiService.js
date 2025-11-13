@@ -193,6 +193,43 @@ class ApiService {
       throw error;
     }
   }
+
+  // Vehicle Service Log specific methods
+  static async getVehicleServiceLogs(vehicleId = null) {
+    const endpoint = vehicleId 
+      ? `/vehicle_service_logs?vehicle_id=${vehicleId}`
+      : '/vehicle_service_logs';
+    return this.get(endpoint);
+  }
+
+  static async addVehicleServiceLog(logData) {
+    return this.post('/vehicle_service_logs', logData);
+  }
+
+  static async updateVehicleServiceLog(logId, logData) {
+    return this.put(`/vehicle_service_logs/${logId}`, logData);
+  }
+
+  static async deleteVehicleServiceLog(logId) {
+    return this.delete(`/vehicle_service_logs/${logId}`);
+  }
+
+  // CHALLENGE 5: Mechanic specific methods - UPDATED ENDPOINTS
+  static async getMechanics() {
+    return this.get('/vehicle_service_logs/api/mechanics/');
+  }
+
+  static async addMechanic(mechanicData) {
+    return this.post('/vehicle_service_logs/api/mechanics/', mechanicData);
+  }
+
+  static async getMechanicStats() {
+    return this.get('/vehicle_service_logs/api/mechanics/stats/most-services');
+  }
+
+  static async getMechanicServiceCosts() {
+    return this.get('/vehicle_service_logs/api/mechanics/stats/service-costs');
+  }
 }
 
 // Example usage:

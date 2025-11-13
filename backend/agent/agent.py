@@ -9,7 +9,7 @@ root_agent = LlmAgent(
     description=AGENT_DESCRIPTION, 
     instruction=ROOT_AGENT_PROMPT,
     tools=[
-    get_vehicle_service_logs,
+        get_vehicle_service_logs,
         add_vehicle_service_log,
         list_services_by_vehicle,
         get_vehicles_service_due_soon,
@@ -24,7 +24,13 @@ root_agent = LlmAgent(
         get_overdue_services,
         get_owner_with_most_services,
         # Multi-modal - Mechanic tools
+        add_mechanic,
+        list_mechanics,
         get_mechanic_with_most_services,
-        get_total_cost_by_mechanic
+        get_total_cost_by_mechanic,
+        # Multi-modal - Documentation tools
+        upload_service_documentation,
+        get_service_documentation,
+        process_uploaded_service_images
     ]
 )
