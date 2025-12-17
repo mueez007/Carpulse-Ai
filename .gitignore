@@ -1,0 +1,11 @@
+# Ignore backend virtual environment
+backend/venv/
+
+# macOS
+.DS_Store
+
+# Python caches
+__pycache__/
+
+# Node modules (frontend)
+node_modules/
